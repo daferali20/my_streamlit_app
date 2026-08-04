@@ -26,12 +26,11 @@ def load_css():
 
 load_css()
 
-# 3. الاستيراد الصحيح للمحرك والأنواع بدون تعديل sys.path
+# 3. الاستيراد الصحيح للمحرك والأنواع
 try:
     from backend.opportunity.opportunity_engine import OpportunityEngine
     from backend.opportunity.models import MarketPhase, OpportunityScoreLevel
 except ImportError:
-    # في حال كان مجلد backend هو الجذر مباشرة على خادمك
     from opportunity.opportunity_engine import OpportunityEngine
     from opportunity.models import MarketPhase, OpportunityScoreLevel
 
@@ -74,21 +73,28 @@ st.caption("تحليل مراحل السوق، المحفزات، واحتمال
 
 if st.button("🔎 تشغيل التحليل الشامل", type="primary"):
     with st.spinner(f"جاري معالجة المؤشرات والمحفزات لـ {symbol}..."):
-        # استدعاء دالة التحليل من opportunity_engine
         result = engine.analyze(symbol, market_data)
 
         st.success("تم إكمال التحليل بنجاح!")
 
+        # استخراج phase_metrics والأنابيب الأساسية بأمان
+        pm = getattr(result, 'phase_metrics', None)
+        
+        current_phase = pm.phase if pm else getattr(result, 'phase', 'N/A')
+        confidence = pm.confidence if pm else getattr(result, 'confidence', 0.0)
+        next_phase = pm.next_phase if pm else getattr(result, 'next_phase', None)
+
+        phase_val = current_phase.value if hasattr(current_phase, 'value') else str(current_phase)
+        score_level_val = result.score_level.value if hasattr(result.score_level, 'value') else str(result.score_level)
+        next_phase_val = next_phase.value if next_phase and hasattr(next_phase, 'value') else (str(next_phase) if next_phase else "غير محدد")
+
         # عرض الكروت والعدادات الرئيسية
         col1, col2, col3, col4 = st.columns(4)
         
-        col1.metric("المرحلة الحالية", result.phase.value if hasattr(result.phase, 'value') else result.phase)
-        col2.metric("درجة الفرصة", f"{result.score:.1f}%", delta=result.score_level.value if hasattr(result.score_level, 'value') else result.score_level)
-        col3.metric("مستوى الثقة", f"{result.confidence:.1f}%")
-        col4.metric(
-            "المرحلة القادمة المتوقعة", 
-             result.next_phase.value if result.next_phase and hasattr(result.next_phase, 'value') else (result.next_phase or "N/A")
-         )
+        col1.metric("المرحلة الحالية", phase_val)
+        col2.metric("درجة الفرصة", f"{result.score:.1f}%", delta=score_level_val)
+        col3.metric("مستوى الثقة", f"{confidence:.1f}%")
+        col4.metric("المرحلة القادمة المتوقعة", next_phase_val)
 
         st.markdown("---")
 
