@@ -11,11 +11,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-# إضافة مجلد backend/opportunity إلى مسار النظام تلقائياً
-sys.path.append(os.path.join(os.path.dirname(__file__), "backend", "opportunity"))
 
-# الآن يمكنك استدعاء الملفات مباشرة دون أخطاء
-from opportunity_engine import OpportunityEngine
 # 2. إدارة المسارات وتشييد الـ CSS بأمان
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -30,18 +26,16 @@ def load_css():
 
 load_css()
 
-# 3. استيراد المحرك والأنواع من المجلد المحلي
+# 3. الاستيراد الصحيح للمحرك والأنواع بدون تعديل sys.path
 try:
-    from backend.opportunity import (
-        OpportunityEngine,
-        MarketPhase,
-        OpportunityScoreLevel
-    )
+    from backend.opportunity.opportunity_engine import OpportunityEngine
+    from backend.opportunity.models import MarketPhase, OpportunityScoreLevel
 except ImportError:
-    # في حال كانت الملفات في مجلد آخر أو بنفس المجلد الرئيسي
-    from backend.opportunity import OpportunityEngine
+    # في حال كان مجلد backend هو الجذر مباشرة على خادمك
+    from opportunity.opportunity_engine import OpportunityEngine
+    from opportunity.models import MarketPhase, OpportunityScoreLevel
 
-# 4. تهيئة المحرك والتخزين المؤقت (st.cache_resource)
+# 4. تهيئة المحرك
 @st.cache_resource
 def get_opportunity_engine():
     return OpportunityEngine()
