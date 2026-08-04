@@ -1,3 +1,4 @@
-# داخل backend/opportunity/__init__.py
+from .models import BusinessProfile, AnalysisResult
 from .opportunity_engine import OpportunityEngine
-from .models import OpportunityData
+
+__all__ = ["BusinessProfile", "AnalysisResult", "OpportunityEngine"]
