@@ -82,13 +82,13 @@ if st.button("🔎 تشغيل التحليل الشامل", type="primary"):
         # عرض الكروت والعدادات الرئيسية
         col1, col2, col3, col4 = st.columns(4)
         
-        col1.metric("المرحلة الحالية", result.phase_metrics.phase.value)
-        col2.metric("درجة الفرصة", f"{result.score:.1f}%", delta=result.score_level.value)
-        col3.metric("مستوى الثقة", f"{result.phase_metrics.confidence:.1f}%")
+        col1.metric("المرحلة الحالية", result.phase.value if hasattr(result.phase, 'value') else result.phase)
+        col2.metric("درجة الفرصة", f"{result.score:.1f}%", delta=result.score_level.value if hasattr(result.score_level, 'value') else result.score_level)
+        col3.metric("مستوى الثقة", f"{result.confidence:.1f}%")
         col4.metric(
             "المرحلة القادمة المتوقعة", 
-            result.phase_metrics.next_phase.value if result.phase_metrics.next_phase else "N/A"
-        )
+             result.next_phase.value if result.next_phase and hasattr(result.next_phase, 'value') else (result.next_phase or "N/A")
+         )
 
         st.markdown("---")
 
