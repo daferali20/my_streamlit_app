@@ -10,7 +10,11 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+# إضافة مجلد backend/opportunity إلى مسار النظام تلقائياً
+sys.path.append(os.path.join(os.path.dirname(__file__), "backend", "opportunity"))
 
+# الآن يمكنك استدعاء الملفات مباشرة دون أخطاء
+from opportunity_engine import OpportunityEngine
 # 2. إدارة المسارات وتشييد الـ CSS بأمان
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
