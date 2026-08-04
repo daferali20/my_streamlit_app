@@ -112,12 +112,20 @@ if st.button("🔎 تشغيل التحليل الشامل", type="primary"):
 
         with col_right:
             st.subheader("⚡ المحفزات المرصودة (Catalysts)")
-            cats = result.catalysts
-            st.write(f"**الفنية:** {', '.join(cats.technical) if cats.technical else 'لا يوجد'}")
-            st.write(f"**الأساسية:** {', '.join(cats.fundamental) if cats.fundamental else 'لا يوجد'}")
-            st.write(f"**المؤسسية:** {', '.join(cats.institutional) if cats.institutional else 'لا يوجد'}")
-            st.write(f"**المشاعر:** {', '.join(cats.sentiment) if cats.sentiment else 'لا يوجد'}")
+            
+            # ✅ التعديل هنا: result.catalysts هي قائمة وليس كائن
+            catalysts = result.catalysts
+            
+            # التحقق من النوع وعرضه بشكل صحيح
+            if isinstance(catalysts, list) and len(catalysts) > 0:
+                st.write("**المحفزات المكتشفة:**")
+                for catalyst in catalysts:
+                    st.write(f"- {catalyst}")
+            else:
+                st.write("لا توجد محفزات مرصودة حالياً")
 
         # التقرير النصي الشامل
         with st.expander("📄 التقرير الشامل المولد بواسطة الذكاء الاصطناعي"):
-            st.markdown(result.ai_report)
+            # استخدام ai_decision_report أو ai_report
+            report = getattr(result, 'ai_decision_report', None) or getattr(result, 'ai_report', 'لا يوجد تقرير متاح')
+            st.markdown(report)
