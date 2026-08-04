@@ -34,8 +34,7 @@ try:
     )
 except ImportError:
     # في حال كانت الملفات في مجلد آخر أو بنفس المجلد الرئيسي
-    from opportunity_engine import OpportunityEngine
-    from models import MarketPhase, OpportunityScoreLevel
+    from backend.opportunity import OpportunityEngine
 
 # 4. تهيئة المحرك والتخزين المؤقت (st.cache_resource)
 @st.cache_resource
