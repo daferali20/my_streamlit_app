@@ -1,11 +1,19 @@
 import os
 import streamlit as st
-from backend.opportunity import BusinessProfile, OpportunityEngine
+import pandas as pd
+from datetime import datetime
 
-# 1. تحديد المسار الرئيسي
+# 1. إعدادات الصفحة
+st.set_page_config(
+    page_title="AI Breakout Scanner",
+    page_icon="🚀",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# 2. إدارة المسارات وتشييد الـ CSS بأمان
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-# 2. تحميل الـ CSS بأمان
 def load_css():
     css_path = os.path.join(PROJECT_ROOT, "assets", "style.css")
     if os.path.exists(css_path):
@@ -15,52 +23,97 @@ def load_css():
         except Exception:
             pass
 
-# 3. إعداد الواجهة
-st.set_page_config(page_title="محلل الفرص - متجر رنة جرس", page_icon="🔔", layout="wide")
 load_css()
 
-st.title("🔔 نظام تحليل الفرص والتطوير - متجر رنة جرس")
-st.caption("https://axssor.com/ | إكسسوارات موضة")
+# 3. استيراد المحرك والأنواع من المجلد المحلي
+try:
+    from backend.opportunity import (
+        OpportunityEngine,
+        MarketPhase,
+        OpportunityScoreLevel
+    )
+except ImportError:
+    # في حال كانت الملفات في مجلد آخر أو بنفس المجلد الرئيسي
+    from opportunity_engine import OpportunityEngine
+    from models import MarketPhase, OpportunityScoreLevel
 
-# 4. التحقق من مفتاح API بأمان
-api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
-if not api_key:
-    st.warning("⚠️ ملاحظة: لم يتم العثور على `OPENAI_API_KEY` في secrets. سيتم العمل بالنموذج المحلي التجريبي.")
-
-# 5. تهيئة المحرك مع التخزين المؤقت
+# 4. تهيئة المحرك والتخزين المؤقت (st.cache_resource)
 @st.cache_resource
-def get_engine():
-    return OpportunityEngine(api_key=api_key)
+def get_opportunity_engine():
+    return OpportunityEngine()
 
-engine = get_engine()
+engine = get_opportunity_engine()
 
-# 6. عرض بيانات المتجر واستقبال المدخلات
-with st.sidebar:
-    st.header("📋بيانات النشاط التجارية")
-    business_name = st.text_input("اسم المتجر", value="متجر رنة جرس")
-    category = st.text_input("التصنيف", value="Fashion accessories store")
-    phone = st.text_input("رقم الهاتف", value="055 484 0091")
-    address = st.text_input("المنطقة", value="Saudi Arabia")
+# 5. الواجهة الجانبية (Sidebar) لتحديد المدخلات والمؤشرات
+st.sidebar.title("🎛️ إعدادات التحليل")
+symbol = st.sidebar.text_input("رمز السهم / الأداة المالية", value="AAPL").upper()
 
-profile = BusinessProfile(
-    name=business_name,
-    category=category,
-    phone=phone,
-    address=address
-)
+st.sidebar.subheader("📊 البيانات المباشرة / المؤشرات")
+bollinger_width = st.sidebar.slider("عرض نطاق بولينجر (Bollinger Width)", 0.0, 1.0, 0.25)
+atr_ratio = st.sidebar.slider("نسبة ATR (ATR Ratio)", 0.0, 1.0, 0.35)
+volume_trend = st.sidebar.slider("اتجاه الحجم (Volume Trend)", 0.5, 5.0, 2.1)
+rsi = st.sidebar.slider("مؤشر القوة النسبية (RSI)", 0, 100, 62)
+pattern_score = st.sidebar.slider("جودة النموذج الفني (Pattern Score)", 0.0, 1.0, 0.8)
+smart_money_flow = st.sidebar.slider("تدفق السيولة الذكية (Smart Money)", 0.0, 1.0, 0.7)
 
-if st.button("🚀 تشغيل تحليل الفرصة", type="primary"):
-    with st.spinner("جاري تحليل الفرصة والتوصيات..."):
-        result = engine.analyze_business(profile)
+# تجميع البيانات للتمرير للمحرك
+market_data = {
+    'bollinger_width': bollinger_width,
+    'atr_ratio': atr_ratio,
+    'volume_trend': volume_trend,
+    'volume_spike': volume_trend,
+    'rsi': rsi,
+    'pattern_score': pattern_score,
+    'smart_money_flow': smart_money_flow,
+    'trend_strength': 0.75,
+    'volatility': 0.35,
+    'market_regime': 0.8
+}
+
+# 6. شاشة العرض الرئيسية
+st.title("🚀 نظام فحص وتنبؤ الاختراقات (AI Breakout Scanner)")
+st.caption("تحليل مراحل السوق، المحفزات، واحتمالات الانتقال باستخدام الذكاء الاصطناعي")
+
+if st.button("🔎 تشغيل التحليل الشامل", type="primary"):
+    with st.spinner(f"جاري معالجة المؤشرات والمحفزات لـ {symbol}..."):
+        # استدعاء دالة التحليل من opportunity_engine
+        result = engine.analyze(symbol, market_data)
+
+        st.success("تم إكمال التحليل بنجاح!")
+
+        # عرض الكروت والعدادات الرئيسية
+        col1, col2, col3, col4 = st.columns(4)
         
-        col1, col2, col3 = st.columns(3)
-        col1.metric("النتيجة (Score)", f"{result.score}%")
-        col2.metric("المرحلة الحالية", result.phase)
-        col3.metric("مستوى الثقة", f"{int(result.confidence * 100)}%")
-        
-        st.subheader("💡 التوصيات المقترحة:")
-        for rec in result.recommendations:
-            st.write(f"- {rec}")
-            
-        st.subheader("📝 التفسير:")
-        st.info(result.explanation)
+        col1.metric("المرحلة الحالية", result.phase_metrics.phase.value)
+        col2.metric("درجة الفرصة", f"{result.score:.1f}%", delta=result.score_level.value)
+        col3.metric("مستوى الثقة", f"{result.phase_metrics.confidence:.1f}%")
+        col4.metric(
+            "المرحلة القادمة المتوقعة", 
+            result.phase_metrics.next_phase.value if result.phase_metrics.next_phase else "N/A"
+        )
+
+        st.markdown("---")
+
+        # تفاصيل المحفزات والأسباب
+        col_left, col_right = st.columns(2)
+
+        with col_left:
+            st.subheader("💡 أسباب وتقييم AI")
+            for reason in result.reasons:
+                st.write(f"- {reason}")
+
+            st.subheader("⚠️ أخطار ومخاطر محتملة")
+            for risk in result.risks:
+                st.warning(f"• {risk}")
+
+        with col_right:
+            st.subheader("⚡ المحفزات المرصودة (Catalysts)")
+            cats = result.catalysts
+            st.write(f"**الفنية:** {', '.join(cats.technical) if cats.technical else 'لا يوجد'}")
+            st.write(f"**الأساسية:** {', '.join(cats.fundamental) if cats.fundamental else 'لا يوجد'}")
+            st.write(f"**المؤسسية:** {', '.join(cats.institutional) if cats.institutional else 'لا يوجد'}")
+            st.write(f"**المشاعر:** {', '.join(cats.sentiment) if cats.sentiment else 'لا يوجد'}")
+
+        # التقرير النصي الشامل
+        with st.expander("📄 التقرير الشامل المولد بواسطة الذكاء الاصطناعي"):
+            st.markdown(result.ai_report)
