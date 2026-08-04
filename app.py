@@ -92,7 +92,7 @@ if st.button("🔎 تشغيل التحليل الشامل", type="primary"):
         col1, col2, col3, col4 = st.columns(4)
         
         col1.metric("المرحلة الحالية", phase_val)
-        col2.metric("درجة الفرصة", f"{result.score:.1f}%", delta=score_level_val)
+        col2.metric("درجة الفرصة", f"{result.opportunity_score:.1f}%")
         col3.metric("مستوى الثقة", f"{confidence:.1f}%")
         col4.metric("المرحلة القادمة المتوقعة", next_phase_val)
 
